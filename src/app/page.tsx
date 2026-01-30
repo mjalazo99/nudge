@@ -7,7 +7,10 @@ type Side = "A" | "B";
 type Draft = {
   title: string;
   action: string;
-  deadlineHours: number; // up to 30d
+  // Deadline picker (max 30 days)
+  days: number; // 0-30
+  hours: number; // 0-24
+  minutes: number; // 0-59
   stakeA: number;
   stakeB: number;
   winner: Side; // who receives pot if completed
@@ -25,19 +28,15 @@ function fmtMoney(n: number) {
   });
 }
 
-function fmtDuration(hours: number) {
-  if (hours < 48) return `${hours}h`;
-  const d = Math.round(hours / 24);
-  if (d < 14) return `${d}d`;
-  const w = Math.round(d / 7);
-  return `${w}w`;
-}
+// (removed) fmtDuration: replaced by days/hours/minutes picker
 
 export default function Page() {
   const [draft, setDraft] = useState<Draft>({
     title: "",
     action: "",
-    deadlineHours: 72,
+    days: 3,
+    hours: 0,
+    minutes: 0,
     stakeA: 20,
     stakeB: 20,
     winner: "A",
@@ -47,6 +46,25 @@ export default function Page() {
     return (draft.stakeA || 0) + (draft.stakeB || 0);
   }, [draft.stakeA, draft.stakeB]);
 
+  const deadlineMinutesTotal = useMemo(() => {
+    const d = clamp(Math.floor(draft.days || 0), 0, 30);
+    const h = clamp(Math.floor(draft.hours || 0), 0, 24);
+    const m = clamp(Math.floor(draft.minutes || 0), 0, 59);
+    return d * 24 * 60 + h * 60 + m;
+  }, [draft.days, draft.hours, draft.minutes]);
+
+  const deadlineLabel = useMemo(() => {
+    const d = Math.floor(deadlineMinutesTotal / (24 * 60));
+    const rem = deadlineMinutesTotal - d * 24 * 60;
+    const h = Math.floor(rem / 60);
+    const m = rem - h * 60;
+    const parts: string[] = [];
+    if (d) parts.push(`${d}d`);
+    if (h) parts.push(`${h}h`);
+    if (m || parts.length === 0) parts.push(`${m}m`);
+    return parts.join(" ");
+  }, [deadlineMinutesTotal]);
+
   const [status, setStatus] = useState<string>("");
 
   async function createNudge() {
@@ -54,7 +72,7 @@ export default function Page() {
     const payload = {
       title: draft.title.trim(),
       action: draft.action.trim(),
-      deadlineHours: draft.deadlineHours,
+      deadlineMinutes: deadlineMinutesTotal,
       stakeA: draft.stakeA,
       stakeB: draft.stakeB,
       winner: draft.winner,
@@ -120,20 +138,57 @@ export default function Page() {
           <div>
             <div className="flex items-center justify-between">
               <label className="text-sm text-zinc-300">Deadline</label>
-              <div className="text-sm text-zinc-300">{fmtDuration(draft.deadlineHours)}</div>
+              <div className="text-sm text-zinc-300">{deadlineLabel}</div>
             </div>
-            <input
-              type="range"
-              min={24}
-              max={24 * 30}
-              step={24}
-              value={draft.deadlineHours}
-              onChange={(e) =>
-                setDraft((d) => ({ ...d, deadlineHours: clamp(Number(e.target.value), 24, 24 * 30) }))
-              }
-              className="mt-2 w-full"
-            />
-            <div className="mt-1 text-xs text-zinc-400">Max 1 month. After deadline, there’s a 24h consensus window.</div>
+
+            <div className="mt-2 grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-zinc-400">Days</label>
+                <select
+                  value={draft.days}
+                  onChange={(e) => setDraft((d) => ({ ...d, days: Number(e.target.value) }))}
+                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                >
+                  {Array.from({ length: 31 }).map((_, i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400">Hours</label>
+                <select
+                  value={draft.hours}
+                  onChange={(e) => setDraft((d) => ({ ...d, hours: Number(e.target.value) }))}
+                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                >
+                  {Array.from({ length: 25 }).map((_, i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-400">Minutes</label>
+                <select
+                  value={draft.minutes}
+                  onChange={(e) => setDraft((d) => ({ ...d, minutes: Number(e.target.value) }))}
+                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                >
+                  {Array.from({ length: 60 }).map((_, i) => (
+                    <option key={i} value={i}>
+                      {i.toString().padStart(2, "0")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-1 text-xs text-zinc-400">Max 30 days. After deadline, there’s a 24h consensus window.</div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
