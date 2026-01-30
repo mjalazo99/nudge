@@ -34,8 +34,8 @@ export default function Page() {
   const [draft, setDraft] = useState<Draft>({
     title: "",
     action: "",
-    days: 3,
-    hours: 0,
+    days: 0,
+    hours: 1,
     minutes: 0,
     stakeA: 20,
     stakeB: 20,
@@ -66,9 +66,22 @@ export default function Page() {
   }, [deadlineMinutesTotal]);
 
   const [status, setStatus] = useState<string>("");
+  const [links, setLinks] = useState<{ urlA: string; urlB: string } | null>(null);
+
+  async function copy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus("Copied ✅");
+      setTimeout(() => setStatus(""), 1200);
+    } catch {
+      // ignore
+    }
+  }
 
   async function createNudge() {
     setStatus("Creating…");
+    setLinks(null);
+
     const payload = {
       title: draft.title.trim(),
       action: draft.action.trim(),
@@ -91,17 +104,10 @@ export default function Page() {
     }
 
     const { urlA, urlB } = await res.json();
+    setLinks({ urlA, urlB });
 
-    // MVP: show both links; creator can send B link to the other person.
-    const msg = `Created ✅\nA link: ${urlA}\nB link: ${urlB}`;
-
-    // copy both links
-    try {
-      await navigator.clipboard.writeText(msg);
-      setStatus(`Created ✅ Links copied to clipboard.\n\nA: ${urlA}\nB: ${urlB}`);
-    } catch {
-      setStatus(msg);
-    }
+    // copy clean URLs (not labeled text)
+    await copy(`${urlA}\n${urlB}`);
   }
 
   return (
@@ -257,8 +263,46 @@ export default function Page() {
             onClick={createNudge}
             className="btn-primary w-full rounded-xl px-4 py-2.5 font-semibold"
           >
-            Create share link
+            Create share links
           </button>
+
+          {links ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="text-xs text-zinc-400">Person A link</div>
+                <a className="mt-1 block break-all text-sm text-emerald-300 underline" href={links.urlA} target="_blank" rel="noreferrer">
+                  {links.urlA}
+                </a>
+                <div className="mt-2 flex gap-2">
+                  <button className="btn-secondary flex-1 rounded-xl px-3 py-2 text-sm" onClick={() => copy(links.urlA)}>
+                    Copy A
+                  </button>
+                  <button className="btn-secondary flex-1 rounded-xl px-3 py-2 text-sm" onClick={() => window.open(links.urlA, "_blank") }>
+                    Open A
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="text-xs text-zinc-400">Person B link</div>
+                <a className="mt-1 block break-all text-sm text-emerald-300 underline" href={links.urlB} target="_blank" rel="noreferrer">
+                  {links.urlB}
+                </a>
+                <div className="mt-2 flex gap-2">
+                  <button className="btn-secondary flex-1 rounded-xl px-3 py-2 text-sm" onClick={() => copy(links.urlB)}>
+                    Copy B
+                  </button>
+                  <button className="btn-secondary flex-1 rounded-xl px-3 py-2 text-sm" onClick={() => window.open(links.urlB, "_blank") }>
+                    Open B
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-xs text-zinc-400">
+                Tip: send the B link to the other person. Each link is unique and lets that person accept + vote.
+              </div>
+            </div>
+          ) : null}
 
           {status ? <div className="text-sm text-zinc-200">{status}</div> : null}
         </section>
