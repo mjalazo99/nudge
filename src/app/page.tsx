@@ -417,9 +417,11 @@ export default function Home() {
           arg(targetFlowStr, t.UFix64),
           arg(durationSeconds, t.UFix64),
         ],
-        proposer: fcl.authz,
-        payer: fcl.authz,
-        authorizations: [fcl.authz],
+        // FCL typing mismatch between Account vs InteractionAccount in some builds.
+        // Runtime works; cast to satisfy Next.js typecheck.
+        proposer: (fcl.authz as unknown) as any,
+        payer: (fcl.authz as unknown) as any,
+        authorizations: [(fcl.authz as unknown) as any],
         limit: 999,
       });
 
@@ -462,9 +464,11 @@ export default function Home() {
           }
         `,
         args: (arg, t) => [arg(String(id), t.UInt64), arg(amount, t.UFix64)],
-        proposer: fcl.authz,
-        payer: fcl.authz,
-        authorizations: [fcl.authz],
+        // FCL typing mismatch between Account vs InteractionAccount in some builds.
+        // Runtime works; cast to satisfy Next.js typecheck.
+        proposer: (fcl.authz as unknown) as any,
+        payer: (fcl.authz as unknown) as any,
+        authorizations: [(fcl.authz as unknown) as any],
         limit: 999,
       });
 
@@ -498,9 +502,11 @@ export default function Home() {
           }
         `,
         args: (arg, t) => [arg(String(id), t.UInt64)],
-        proposer: fcl.authz,
-        payer: fcl.authz,
-        authorizations: [fcl.authz],
+        // FCL typing mismatch between Account vs InteractionAccount in some builds.
+        // Runtime works; cast to satisfy Next.js typecheck.
+        proposer: (fcl.authz as unknown) as any,
+        payer: (fcl.authz as unknown) as any,
+        authorizations: [(fcl.authz as unknown) as any],
         limit: 999,
       });
 

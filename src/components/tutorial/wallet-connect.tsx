@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Connect } from "@onflow/react-sdk";
 
-export default function Home() {
+export function WalletConnect() {
   const [dare, setDare] = useState("");
   const [target, setTarget] = useState("10");
 
@@ -109,3 +109,5 @@ export default function Home() {
     </main>
   );
 }
+
+export default WalletConnect;
