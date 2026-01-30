@@ -1,944 +1,212 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { fcl } from "../lib/flow";
+import { useMemo, useState } from "react";
 
-// pretend price: 1 FLOW = $0.50
-const FLOW_USD = 0.5;
+type Side = "A" | "B";
 
-// ---------------- HERO ----------------
-function Hero() {
-  return (
-    <section
-      style={{
-        background:
-          "linear-gradient(140deg, rgba(59,130,246,0.16) 0%, rgba(0,0,0,0) 60%)",
-        border: "1px solid rgba(255,255,255,0.03)",
-        borderRadius: "1.4rem",
-        padding: "1.25rem 1.25rem 1.1rem",
-        marginBottom: "1.25rem",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "1.25rem",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* left text */}
-        <div style={{ maxWidth: "420px" }}>
-          <p
-            style={{
-              fontSize: "0.7rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "rgba(255,255,255,0.4)",
-              marginBottom: "0.3rem",
-            }}
-          >
-            nudge 👀
-          </p>
-          <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 650,
-              color: "#fff",
-              marginBottom: "0.35rem",
-            }}
-          >
-            Don’t predict. Incentivize.
-          </h2>
-          <p
-            style={{
-              color: "rgba(255,255,255,0.62)",
-              fontSize: "0.78rem",
-              lineHeight: 1.4,
-            }}
-          >
-            “I’ll do it if you fund it.” Nudge lets you post an action, set a
-            goal in dollars, and rally your friends to make it happen. Money
-            stays locked until it’s done — because motivation hits different
-            when your friends are in.
-          </p>
-        </div>
-
-        {/* right example cards */}
-        <div
-          style={{
-            display: "flex",
-            gap: "0.6rem",
-            flexWrap: "wrap",
-            minWidth: "280px",
-          }}
-        >
-          <div
-            style={{
-              background: "rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.03)",
-              borderRadius: "1rem",
-              padding: "0.6rem 0.7rem 0.55rem",
-              minWidth: "160px",
-            }}
-          >
-            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
-              Social dare
-            </p>
-            <p style={{ fontSize: "0.75rem", color: "#fff", marginTop: "0.25rem" }}>
-              “$20 and I’ll jump in the ocean.”
-            </p>
-          </div>
-          <div
-            style={{
-              background: "rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.03)",
-              borderRadius: "1rem",
-              padding: "0.6rem 0.7rem 0.55rem",
-              minWidth: "160px",
-            }}
-          >
-            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
-              Group goal
-            </p>
-            <p style={{ fontSize: "0.75rem", color: "#fff", marginTop: "0.25rem" }}>
-              “When this hits $500, we host the afterparty.”
-            </p>
-          </div>
-          <div
-            style={{
-              background: "rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.03)",
-              borderRadius: "1rem",
-              padding: "0.6rem 0.7rem 0.55rem",
-              minWidth: "160px",
-            }}
-          >
-            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
-              Dream nudge
-            </p>
-            <p style={{ fontSize: "0.75rem", color: "#fff", marginTop: "0.25rem" }}>
-              “$1,000 and I’ll book the show.”
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --------------- EXPLORE SECTION ---------------
-function ExploreNudges() {
-  return (
-    <section style={{ marginBottom: "1.5rem" }}>
-      <h2 style={{ color: "#fff", fontSize: "1rem", marginBottom: "0.5rem" }}>
-        Explore Nudge types
-      </h2>
-      <p
-        style={{
-          color: "rgba(255,255,255,0.4)",
-          fontSize: "0.75rem",
-          marginBottom: "1rem",
-        }}
-      >
-        Different vibes, same idea — <strong>“For $X, I will…”</strong>
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-          gap: "0.75rem",
-        }}
-      >
-        {/* ... keeping the cards the same as before ... */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.015)",
-            border: "1px solid rgba(255,255,255,0.03)",
-            borderRadius: "1rem",
-            padding: "0.75rem 0.8rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.65rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "0.4rem",
-            }}
-          >
-            Group goals
-          </p>
-          <p style={{ color: "#fff", fontSize: "0.74rem" }}>
-            For <strong>$300</strong>, I will rent the karaoke room.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$500</strong>, I will throw the afterparty.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$1,000</strong>, I will book the weekend trip.
-          </p>
-        </div>
-        <div
-          style={{
-            background: "rgba(255,255,255,0.015)",
-            border: "1px solid rgba(255,255,255,0.03)",
-            borderRadius: "1rem",
-            padding: "0.75rem 0.8rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.65rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "0.4rem",
-            }}
-          >
-            Creator unlocks
-          </p>
-          <p style={{ color: "#fff", fontSize: "0.74rem" }}>
-            For <strong>$400</strong>, I will drop the new music video.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$250</strong>, I will host a class for backers.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$1,000</strong>, I will host a public meetup.
-          </p>
-        </div>
-        <div
-          style={{
-            background: "rgba(255,255,255,0.015)",
-            border: "1px solid rgba(255,255,255,0.03)",
-            borderRadius: "1rem",
-            padding: "0.75rem 0.8rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.65rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "0.4rem",
-            }}
-          >
-            Social nudges
-          </p>
-          <p style={{ color: "#fff", fontSize: "0.74rem" }}>
-            For <strong>$20</strong>, I will wear my costume to brunch.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$15</strong>, I will text my ex “hope you’re well.”
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$50</strong>, I will sing karaoke solo.
-          </p>
-        </div>
-        <div
-          style={{
-            background: "rgba(255,255,255,0.015)",
-            border: "1px solid rgba(255,255,255,0.03)",
-            borderRadius: "1rem",
-            padding: "0.75rem 0.8rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.65rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "0.4rem",
-            }}
-          >
-            Public challenges
-          </p>
-          <p style={{ color: "#fff", fontSize: "0.74rem" }}>
-            For <strong>$200</strong>, I will run a 5K.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$100</strong>, I will delete TikTok for a week.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$50</strong>, I will wake up at 6am for 7 days.
-          </p>
-        </div>
-        <div
-          style={{
-            background: "rgba(255,255,255,0.015)",
-            border: "1px solid rgba(255,255,255,0.03)",
-            borderRadius: "1rem",
-            padding: "0.75rem 0.8rem",
-          }}
-        >
-          <p
-            style={{
-              fontSize: "0.65rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "0.4rem",
-            }}
-          >
-            Good deeds
-          </p>
-          <p style={{ color: "#fff", fontSize: "0.74rem" }}>
-            For <strong>$100</strong>, I will buy groceries for a neighbor.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$200</strong>, I will volunteer at the shelter.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.7rem" }}>
-            For <strong>$300</strong>, I will foster a dog for a month.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ----------- TYPES -----------
-type ActionView = {
-  id: number;
-  creator: string;
-  description: string;
-  target: string;
-  raised: string;
-  expiresAt: string;
-  isCompleted: boolean;
-  isRefunded: boolean;
+type Draft = {
+  title: string;
+  action: string;
+  deadlineHours: number; // up to 30d
+  stakeA: number;
+  stakeB: number;
+  winner: Side; // who receives pot if completed
 };
 
-// --------------- MAIN PAGE ---------------
-export default function Home() {
-  const [user, setUser] = useState<any>(null);
-  const [actions, setActions] = useState<ActionView[]>([]);
-  const [desc, setDesc] = useState("Wash the dishes");
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
 
-  // new: USD target input
-  const [targetUsd, setTargetUsd] = useState("20");
-  // derived FLOW (string)
-  const derivedFlow = targetUsd
-    ? (Number(targetUsd) / FLOW_USD).toFixed(8)
-    : "0.00000000";
+function fmtMoney(n: number) {
+  return n.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  });
+}
 
-  // new: datetime local expiry
-  const [expiry, setExpiry] = useState(() => {
-    const d = new Date();
-    d.setHours(d.getHours() + 1);
-    return d.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+function fmtDuration(hours: number) {
+  if (hours < 48) return `${hours}h`;
+  const d = Math.round(hours / 24);
+  if (d < 14) return `${d}d`;
+  const w = Math.round(d / 7);
+  return `${w}w`;
+}
+
+export default function Page() {
+  const [draft, setDraft] = useState<Draft>({
+    title: "",
+    action: "",
+    deadlineHours: 72,
+    stakeA: 20,
+    stakeB: 20,
+    winner: "A",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [banner, setBanner] = useState<string | null>(null);
+  const pot = useMemo(() => {
+    return (draft.stakeA || 0) + (draft.stakeB || 0);
+  }, [draft.stakeA, draft.stakeB]);
 
-  // for countdowns
-  const [now, setNow] = useState(Date.now());
+  const [status, setStatus] = useState<string>("");
 
-  // subscribe to wallet
-  useEffect(() => {
-    fcl.currentUser().subscribe(setUser);
-  }, []);
+  async function createNudge() {
+    setStatus("Creating…");
+    const payload = {
+      title: draft.title.trim(),
+      action: draft.action.trim(),
+      deadlineHours: draft.deadlineHours,
+      stakeA: draft.stakeA,
+      stakeB: draft.stakeB,
+      winner: draft.winner,
+    };
 
-  // load actions
-  useEffect(() => {
-    fetchActions();
-  }, []);
+    const res = await fetch("/api/nudges", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-  // tick every second
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  async function fetchActions() {
-    try {
-      const resp: any = await fcl.query({
-        cadence: `
-          import DareflowEscrow from 0xf8d6e0586b0a20c7
-
-          access(all) fun main(): [DareflowEscrow.ActionView] {
-              return DareflowEscrow.getActions()
-          }
-        `,
-        args: (arg, t) => [],
-      });
-      setActions((resp ?? []).sort((a: any, b: any) => b.id - a.id));
-    } catch (e) {
-      console.error("fetchActions error", e);
-    }
-  }
-
-  function makeDurationSeconds(): string {
-    // expiry is like "2025-11-10T17:00"
-    const exp = new Date(expiry).getTime(); // ms
-    const nowMs = Date.now();
-    const diff = Math.max(0, (exp - nowMs) / 1000);
-    // Cadence wants UFix64, so  "3600.0"
-    return diff.toFixed(1);
-  }
-
-  async function createAction(e: React.FormEvent) {
-    e.preventDefault();
-    if (!user?.addr) {
-      setBanner("Connect wallet first.");
+    if (!res.ok) {
+      const msg = await res.text();
+      setStatus(`Error: ${msg || res.status}`);
       return;
     }
 
-    setLoading(true);
-    setBanner("creating…");
+    const { id, url } = await res.json();
+    setStatus(`Created ✅ Share link: ${url}`);
 
+    // simple UX: copy link
     try {
-      const targetFlowStr = derivedFlow; // already to 8 decimals
-      const durationSeconds = makeDurationSeconds();
-
-      const txId = await fcl.mutate({
-        cadence: `
-          import DareflowEscrow from 0xf8d6e0586b0a20c7
-
-          transaction(description: String, target: UFix64, duration: UFix64) {
-              prepare(signer: auth(BorrowValue) &Account) {
-                  DareflowEscrow.createAction(
-                      description: description,
-                      target: target,
-                      duration: duration
-                  )
-              }
-          }
-        `,
-        args: (arg, t) => [
-          arg(desc, t.String),
-          arg(targetFlowStr, t.UFix64),
-          arg(durationSeconds, t.UFix64),
-        ],
-        // FCL typing mismatch between Account vs InteractionAccount in some builds.
-        // Runtime works; cast to satisfy Next.js typecheck.
-        proposer: (fcl.authz as unknown) as any,
-        payer: (fcl.authz as unknown) as any,
-        authorizations: [(fcl.authz as unknown) as any],
-        limit: 999,
-      });
-
-      fcl.tx(txId).subscribe((s: any) => {
-        if (s.status === 4) {
-          setBanner("✅ nudge created");
-          fetchActions();
-          setDesc("");
-        }
-      });
-    } catch (err) {
-      console.error(err);
-      setBanner("❌ error creating nudge");
-    } finally {
-      setLoading(false);
+      await navigator.clipboard.writeText(url);
+      setStatus(`Created ✅ Link copied: ${url}`);
+    } catch {
+      setStatus(`Created ✅ Share link: ${url}`);
     }
-  }
-
-  async function fundAction(id: number) {
-    const amount = prompt(
-      "How much FLOW to add? (example: 5.00000000)",
-      "5.00000000"
-    );
-    if (!amount) return;
-    setBanner("funding…");
-
-    try {
-      const txId = await fcl.mutate({
-        cadence: `
-          import DareflowEscrow from 0xf8d6e0586b0a20c7
-
-          transaction(actionId: UInt64, amount: UFix64) {
-              prepare(signer: auth(BorrowValue) &Account) {
-                  DareflowEscrow.fundAction(
-                      id: actionId,
-                      from: signer.address,
-                      amount: amount
-                  )
-              }
-          }
-        `,
-        args: (arg, t) => [arg(String(id), t.UInt64), arg(amount, t.UFix64)],
-        // FCL typing mismatch between Account vs InteractionAccount in some builds.
-        // Runtime works; cast to satisfy Next.js typecheck.
-        proposer: (fcl.authz as unknown) as any,
-        payer: (fcl.authz as unknown) as any,
-        authorizations: [(fcl.authz as unknown) as any],
-        limit: 999,
-      });
-
-      fcl.tx(txId).subscribe((s: any) => {
-        if (s.status === 4) {
-          setBanner("✅ funded");
-          fetchActions();
-        }
-      });
-    } catch (e) {
-      console.error(e);
-      setBanner("❌ error funding");
-    }
-  }
-
-  async function completeAction(id: number) {
-    setBanner("marking complete…");
-
-    try {
-      const txId = await fcl.mutate({
-        cadence: `
-          import DareflowEscrow from 0xf8d6e0586b0a20c7
-
-          transaction(actionId: UInt64) {
-              prepare(signer: auth(BorrowValue) &Account) {
-                  DareflowEscrow.completeAction(
-                      id: actionId,
-                      caller: signer.address
-                  )
-              }
-          }
-        `,
-        args: (arg, t) => [arg(String(id), t.UInt64)],
-        // FCL typing mismatch between Account vs InteractionAccount in some builds.
-        // Runtime works; cast to satisfy Next.js typecheck.
-        proposer: (fcl.authz as unknown) as any,
-        payer: (fcl.authz as unknown) as any,
-        authorizations: [(fcl.authz as unknown) as any],
-        limit: 999,
-      });
-
-      fcl.tx(txId).subscribe((s: any) => {
-        if (s.status === 4) {
-          setBanner("✅ marked complete");
-          fetchActions();
-        }
-      });
-    } catch (e) {
-      console.error(e);
-      setBanner("❌ error marking complete");
-    }
-  }
-
-  function progress(a: ActionView) {
-    const t = Number(a.target);
-    const r = Number(a.raised);
-    if (!t || t <= 0) return 0;
-    return Math.min(100, Math.floor((r / t) * 100));
-  }
-
-  // helper to show countdown
-  function formatCountdown(a: ActionView) {
-    // a.expiresAt is a UFix64 string like "173123...."
-    const expSec = parseFloat(a.expiresAt); // seconds
-    if (!expSec) return "—";
-    const expMs = expSec * 1000;
-    const diff = expMs - now;
-    if (diff <= 0) return "expired";
-
-    const totalSeconds = Math.floor(diff / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    return `${hours}h ${minutes}m ${seconds}s left`;
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#000",
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        style={{ width: "100%", maxWidth: "1080px", padding: "1.5rem 1.25rem 4rem" }}
-      >
-        {/* top bar */}
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <div>
-  <h1
-    style={{
-      fontSize: "1.9rem",
-      color: "#fff",
-      marginBottom: "0.25rem",
-    }}
-  >
-    nudge 👀
-  </h1>
-  <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
-    <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem" }}>
-      Don’t predict. Incentivize.
-    </p>
-    <a
-      href="/why"
-      style={{
-        fontSize: "0.68rem",
-        color: "rgba(255,255,255,0.7)",
-        textDecoration: "none",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "9999px",
-        padding: "0.15rem 0.5rem",
-      }}
-    >
-      Why Nudge?
-    </a>
-  </div>
-</div>
-
-          {user && user.addr ? (
-            <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)" }}>
-                Connected
-              </p>
-              <p style={{ fontSize: "0.8rem", color: "#fff" }}>{user.addr}</p>
-              <button
-                onClick={() => fcl.unauthenticate()}
-                style={{
-                  marginTop: "0.4rem",
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "9999px",
-                  color: "#fff",
-                  padding: "0.25rem 0.8rem",
-                  fontSize: "0.7rem",
-                  cursor: "pointer",
-                }}
-              >
-                Disconnect
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => fcl.authenticate()}
-              style={{
-                background: "#fff",
-                border: "none",
-                borderRadius: "9999px",
-                padding: "0.45rem 1rem",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Connect Wallet
-            </button>
-          )}
+    <main className="min-h-screen bg-zinc-950 text-zinc-50">
+      <div className="mx-auto max-w-xl px-5 py-10">
+        <header className="mb-8">
+          <div className="text-sm text-zinc-400">nudge</div>
+          <h1 className="text-3xl font-semibold tracking-tight">Don’t predict. Incentivize.</h1>
+          <p className="mt-2 text-zinc-300">
+            Two people agree on terms up front, put real money on it, and settle by mutual confirmation.
+          </p>
         </header>
 
-        {/* hero */}
-        <Hero />
-        <ExploreNudges />
-
-        {/* banner */}
-        {banner && (
-          <div
-            style={{
-              background: "rgba(59,130,246,0.12)",
-              border: "1px solid rgba(59,130,246,0.3)",
-              color: "#fff",
-              borderRadius: "0.75rem",
-              padding: "0.6rem 1rem",
-              marginBottom: "1.25rem",
-              fontSize: "0.78rem",
-            }}
-          >
-            {banner}
-          </div>
-        )}
-
-        {/* 2-column layout */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(320px, 360px) 1fr",
-            gap: "1.5rem",
-          }}
-        >
-          {/* left: create */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.03)",
-              borderRadius: "1.2rem",
-              padding: "1.25rem",
-            }}
-          >
-            <h2 style={{ color: "#fff", fontSize: "1rem", marginBottom: "1rem" }}>
-              Create a nudge
-            </h2>
-            <p
-              style={{
-                color: "rgba(255,255,255,0.4)",
-                fontSize: "0.75rem",
-                marginBottom: "1rem",
-              }}
-            >
-              “For $X, I will…” Your friends fund it, you do it, chain records it.
-            </p>
-
-            <form onSubmit={createAction}>
-              <label
-                style={{
-                  display: "block",
-                  color: "#fff",
-                  fontSize: "0.7rem",
-                  marginBottom: "0.35rem",
-                }}
-              >
-                Description
-              </label>
-              <input
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                required
-                placeholder="Host the afterparty"
-                style={{
-                  width: "100%",
-                  background: "rgba(0,0,0,0.4)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  borderRadius: "0.6rem",
-                  padding: "0.5rem 0.65rem",
-                  color: "#fff",
-                  marginBottom: "0.8rem",
-                }}
-              />
-
-              {/* USD target */}
-              <label
-                style={{
-                  display: "block",
-                  color: "#fff",
-                  fontSize: "0.7rem",
-                  marginBottom: "0.35rem",
-                }}
-              >
-                Target (USD)
-              </label>
-              <input
-                value={targetUsd}
-                onChange={(e) => setTargetUsd(e.target.value)}
-                placeholder="50"
-                style={{
-                  width: "100%",
-                  background: "rgba(0,0,0,0.4)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  borderRadius: "0.6rem",
-                  padding: "0.5rem 0.65rem",
-                  color: "#fff",
-                  marginBottom: "0.5rem",
-                }}
-              />
-              <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
-                ≈ {derivedFlow} FLOW (using 1 FLOW = ${FLOW_USD})
-              </p>
-
-              {/* datetime picker */}
-              <label
-                style={{
-                  display: "block",
-                  color: "#fff",
-                  fontSize: "0.7rem",
-                  marginTop: "0.8rem",
-                  marginBottom: "0.35rem",
-                }}
-              >
-                Expires at
-              </label>
-              <input
-                type="datetime-local"
-                value={expiry}
-                min={new Date().toISOString().slice(0, 16)}
-                onChange={(e) => setExpiry(e.target.value)}
-                style={{
-                  width: "100%",
-                  background: "rgba(0,0,0,0.4)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  borderRadius: "0.6rem",
-                  padding: "0.5rem 0.65rem",
-                  color: "#fff",
-                  marginBottom: "0.8rem",
-                }}
-              />
-
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  background: loading ? "rgba(255,255,255,0.25)" : "#3b82f6",
-                  color: "#000",
-                  border: "none",
-                  borderRadius: "0.75rem",
-                  padding: "0.6rem 0.7rem",
-                  fontWeight: 600,
-                  cursor: loading ? "wait" : "pointer",
-                  marginTop: "0.2rem",
-                }}
-              >
-                {loading ? "Creating..." : "Create Nudge"}
-              </button>
-            </form>
-          </div>
-
-          {/* right: feed */}
+        <section className="space-y-5 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
           <div>
-            <h2 style={{ color: "#fff", fontSize: "1rem", marginBottom: "0.75rem" }}>
-              Activity
-            </h2>
-            <p
-              style={{
-                color: "rgba(255,255,255,0.35)",
-                fontSize: "0.7rem",
-                marginBottom: "1rem",
-              }}
-            >
-              Latest nudges on chain.
-            </p>
+            <label className="text-sm text-zinc-300">Title</label>
+            <input
+              value={draft.title}
+              onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+              placeholder="For $40, I’ll…"
+            />
+          </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {actions.length === 0 && (
-                <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.8rem" }}>
-                  No nudges yet — make the first one 🔥
-                </p>
-              )}
+          <div>
+            <label className="text-sm text-zinc-300">Action</label>
+            <textarea
+              value={draft.action}
+              onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
+              className="mt-1 w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+              rows={4}
+              placeholder="Describe what has to happen. Keep it crisp."
+            />
+          </div>
 
-              {actions.map((a) => (
-                <div
-                  key={a.id}
-                  style={{
-                    background: "rgba(255,255,255,0.015)",
-                    border: "1px solid rgba(255,255,255,0.03)",
-                    borderRadius: "1rem",
-                    padding: "0.85rem 0.9rem 0.75rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "0.3rem",
-                    }}
-                  >
-                    <p style={{ color: "#fff", fontWeight: 600 }}>{a.description}</p>
-                    <span
-                      style={{
-                        fontSize: "0.6rem",
-                        background: a.isCompleted
-                          ? "rgba(59,130,246,0.15)"
-                          : "rgba(255,255,255,0.03)",
-                        border: a.isCompleted
-                          ? "1px solid rgba(59,130,246,0.55)"
-                          : "1px solid rgba(255,255,255,0.02)",
-                        color: a.isCompleted
-                          ? "#fff"
-                          : "rgba(255,255,255,0.4)",
-                        borderRadius: "9999px",
-                        padding: "0.18rem 0.45rem",
-                      }}
-                    >
-                      {a.isCompleted ? "completed" : "open"}
-                    </span>
-                  </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-zinc-300">Deadline</label>
+              <div className="text-sm text-zinc-300">{fmtDuration(draft.deadlineHours)}</div>
+            </div>
+            <input
+              type="range"
+              min={24}
+              max={24 * 30}
+              step={24}
+              value={draft.deadlineHours}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, deadlineHours: clamp(Number(e.target.value), 24, 24 * 30) }))
+              }
+              className="mt-2 w-full"
+            />
+            <div className="mt-1 text-xs text-zinc-400">Max 1 month. After deadline, there’s a 24h consensus window.</div>
+          </div>
 
-                  <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.35)" }}>
-                    id {a.id} • creator {a.creator}
-                  </p>
-
-                  {/* countdown */}
-                  <p
-                    style={{
-                      fontSize: "0.67rem",
-                      color: "rgba(255,255,255,0.6)",
-                      marginTop: "0.4rem",
-                    }}
-                  >
-                    {formatCountdown(a)}
-                  </p>
-
-                  {/* progress */}
-                  <div style={{ marginTop: "0.55rem" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: "0.65rem",
-                        color: "rgba(255,255,255,0.4)",
-                        marginBottom: "0.3rem",
-                      }}
-                    >
-                      <span>
-                        raised {a.raised} / {a.target} FLOW
-                      </span>
-                      <span>{progress(a)}%</span>
-                    </div>
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "6px",
-                        background: "rgba(255,255,255,0.03)",
-                        borderRadius: "9999px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${progress(a)}%`,
-                          height: "100%",
-                          background: "linear-gradient(90deg,#3b82f6,#93c5fd)",
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* actions */}
-                  <div style={{ display: "flex", gap: "0.45rem", marginTop: "0.7rem" }}>
-                    <button
-                      onClick={() => fundAction(a.id)}
-                      style={{
-                        background: "#fff",
-                        color: "#000",
-                        border: "none",
-                        borderRadius: "0.6rem",
-                        padding: "0.4rem 0.8rem",
-                        fontSize: "0.72rem",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Fund
-                    </button>
-                    <button
-                      onClick={() => completeAction(a.id)}
-                      style={{
-                        background: "#3b82f6",
-                        color: "#000",
-                        border: "none",
-                        borderRadius: "0.6rem",
-                        padding: "0.4rem 0.8rem",
-                        fontSize: "0.72rem",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Complete
-                    </button>
-                  </div>
-                </div>
-              ))}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm text-zinc-300">Stake (Person A)</label>
+              <input
+                inputMode="decimal"
+                value={draft.stakeA}
+                onChange={(e) => setDraft((d) => ({ ...d, stakeA: clamp(Number(e.target.value || 0), 0, 100000) }))}
+                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-zinc-300">Stake (Person B)</label>
+              <input
+                inputMode="decimal"
+                value={draft.stakeB}
+                onChange={(e) => setDraft((d) => ({ ...d, stakeB: clamp(Number(e.target.value || 0), 0, 100000) }))}
+                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+              />
             </div>
           </div>
-        </div>
+
+          <div>
+            <label className="text-sm text-zinc-300">Winner (gets the pot if completed)</label>
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => setDraft((d) => ({ ...d, winner: "A" }))}
+                className={`flex-1 rounded-xl border px-3 py-2 text-sm ${
+                  draft.winner === "A"
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : "border-zinc-800 bg-zinc-950"
+                }`}
+              >
+                Person A
+              </button>
+              <button
+                onClick={() => setDraft((d) => ({ ...d, winner: "B" }))}
+                className={`flex-1 rounded-xl border px-3 py-2 text-sm ${
+                  draft.winner === "B"
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : "border-zinc-800 bg-zinc-950"
+                }`}
+              >
+                Person B
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-zinc-950 p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-zinc-300">Pot</div>
+              <div className="text-lg font-semibold">{fmtMoney(pot)}</div>
+            </div>
+            <div className="mt-2 text-xs text-zinc-400">
+              If you don’t both confirm within 24h after the deadline, 100% forfeits to the platform (v1 rule).
+            </div>
+          </div>
+
+          <button
+            onClick={createNudge}
+            className="w-full rounded-xl bg-emerald-500 px-4 py-2.5 font-semibold text-zinc-950 hover:bg-emerald-400"
+          >
+            Create share link
+          </button>
+
+          {status ? <div className="text-sm text-zinc-200">{status}</div> : null}
+        </section>
+
+        <footer className="mt-8 text-xs text-zinc-500">
+          MVP: Stripe (test mode), 2 people, mutual consent up front.
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
