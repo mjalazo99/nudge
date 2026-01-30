@@ -114,13 +114,13 @@ export default function NudgePage() {
   const anyVoted = nudge.outcome.A || nudge.outcome.B;
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-50">
+    <main className="min-h-screen text-zinc-50">
       <div className="mx-auto max-w-xl px-5 py-10">
         <div className="text-sm text-zinc-400">nudge</div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">{nudge.title}</h1>
         <p className="mt-3 text-zinc-200 whitespace-pre-wrap">{nudge.action}</p>
 
-        <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
+        <div className="glass mt-6 rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-zinc-300">Pot</div>
             <div className="text-lg font-semibold">{fmtMoney(pot)}</div>
@@ -129,7 +129,7 @@ export default function NudgePage() {
           <div className="text-sm text-zinc-300">Stake B: {fmtMoney(nudge.stakeB)}</div>
           <div className="text-sm text-zinc-300">Winner if completed: Person {nudge.winner}</div>
 
-          <div className="rounded-xl bg-zinc-950 p-4">
+          <div className="glass-soft rounded-xl p-4">
             <div className="text-xs text-zinc-400">Time remaining</div>
             <div className="mt-1 font-mono text-lg">{expired ? "ENDED" : countdown}</div>
             {nudge.endedEarlyAt ? (
@@ -138,7 +138,7 @@ export default function NudgePage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
+        <div className="glass mt-6 rounded-2xl p-6 space-y-4">
           <div className="text-sm font-semibold">Step 1 — Agree to the terms</div>
           <div className="text-sm text-zinc-300">
             Both people must accept before any money is captured (Stripe wiring next).
@@ -162,7 +162,7 @@ export default function NudgePage() {
           </button>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
+        <div className="glass mt-6 rounded-2xl p-6 space-y-4">
           <div className="text-sm font-semibold">Step 2 — Consensus</div>
           <div className="text-sm text-zinc-300">
             Each person submits whether it happened. If both submit “done”, we end the timer early.
@@ -177,14 +177,14 @@ export default function NudgePage() {
             <button
               disabled={!isKnownViewer || !bothAccepted || bothDone}
               onClick={() => act("outcome", "done")}
-              className="rounded-xl bg-emerald-500 px-4 py-2.5 font-semibold text-zinc-950 disabled:opacity-50"
+              className="btn-primary rounded-xl px-4 py-2.5 font-semibold disabled:opacity-50"
             >
               It happened ✅
             </button>
             <button
               disabled={!isKnownViewer || !bothAccepted || bothDone}
               onClick={() => act("outcome", "not_done")}
-              className="rounded-xl bg-zinc-800 px-4 py-2.5 font-semibold text-zinc-50 disabled:opacity-50"
+              className="btn-secondary rounded-xl px-4 py-2.5 font-semibold text-zinc-50 disabled:opacity-50"
             >
               It didn’t ❌
             </button>

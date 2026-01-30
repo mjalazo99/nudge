@@ -105,23 +105,26 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto max-w-xl px-5 py-10">
-        <header className="mb-8">
-          <div className="text-sm text-zinc-400">nudge</div>
-          <h1 className="text-3xl font-semibold tracking-tight">Don’t predict. Incentivize.</h1>
-          <p className="mt-2 text-zinc-300">
+    <main className="min-h-screen text-zinc-50">
+      <div className="mx-auto max-w-xl px-5 py-12">
+        <header className="mb-10 text-center">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            nudge
+          </div>
+          <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">Don’t predict. Incentivize.</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm text-zinc-300 sm:text-base">
             Two people agree on terms up front, put real money on it, and settle by mutual confirmation.
           </p>
         </header>
 
-        <section className="space-y-5 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <section className="glass space-y-5 rounded-2xl p-6">
           <div>
             <label className="text-sm text-zinc-300">Title</label>
             <input
               value={draft.title}
               onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+              className="input mt-1 w-full rounded-xl px-3 py-2 text-zinc-50"
               placeholder="For $40, I’ll…"
             />
           </div>
@@ -131,7 +134,7 @@ export default function Page() {
             <textarea
               value={draft.action}
               onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
-              className="mt-1 w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+              className="input mt-1 w-full resize-none rounded-xl px-3 py-2 text-zinc-50"
               rows={4}
               placeholder="Describe what has to happen. Keep it crisp."
             />
@@ -149,7 +152,7 @@ export default function Page() {
                 <select
                   value={draft.days}
                   onChange={(e) => setDraft((d) => ({ ...d, days: Number(e.target.value) }))}
-                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                  className="input mt-1 w-full rounded-xl px-3 py-2 text-zinc-50"
                 >
                   {Array.from({ length: 31 }).map((_, i) => (
                     <option key={i} value={i}>
@@ -164,7 +167,7 @@ export default function Page() {
                 <select
                   value={draft.hours}
                   onChange={(e) => setDraft((d) => ({ ...d, hours: Number(e.target.value) }))}
-                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                  className="input mt-1 w-full rounded-xl px-3 py-2 text-zinc-50"
                 >
                   {Array.from({ length: 25 }).map((_, i) => (
                     <option key={i} value={i}>
@@ -179,7 +182,7 @@ export default function Page() {
                 <select
                   value={draft.minutes}
                   onChange={(e) => setDraft((d) => ({ ...d, minutes: Number(e.target.value) }))}
-                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                  className="input mt-1 w-full rounded-xl px-3 py-2 text-zinc-50"
                 >
                   {Array.from({ length: 60 }).map((_, i) => (
                     <option key={i} value={i}>
@@ -200,7 +203,7 @@ export default function Page() {
                 inputMode="decimal"
                 value={draft.stakeA}
                 onChange={(e) => setDraft((d) => ({ ...d, stakeA: clamp(Number(e.target.value || 0), 0, 100000) }))}
-                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                className="input mt-1 w-full rounded-xl px-3 py-2 text-zinc-50"
               />
             </div>
             <div>
@@ -209,7 +212,7 @@ export default function Page() {
                 inputMode="decimal"
                 value={draft.stakeB}
                 onChange={(e) => setDraft((d) => ({ ...d, stakeB: clamp(Number(e.target.value || 0), 0, 100000) }))}
-                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-50 outline-none focus:border-zinc-600"
+                className="input mt-1 w-full rounded-xl px-3 py-2 text-zinc-50"
               />
             </div>
           </div>
@@ -240,7 +243,7 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-zinc-950 p-4">
+          <div className="glass-soft rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-zinc-300">Pot</div>
               <div className="text-lg font-semibold">{fmtMoney(pot)}</div>
@@ -252,7 +255,7 @@ export default function Page() {
 
           <button
             onClick={createNudge}
-            className="w-full rounded-xl bg-emerald-500 px-4 py-2.5 font-semibold text-zinc-950 hover:bg-emerald-400"
+            className="btn-primary w-full rounded-xl px-4 py-2.5 font-semibold"
           >
             Create share link
           </button>
