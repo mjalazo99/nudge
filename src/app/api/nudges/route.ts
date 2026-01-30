@@ -66,7 +66,10 @@ export async function POST(req: Request) {
     tokens: { A: tokenA, B: tokenB },
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  // Build absolute URLs that work on whatever host the user is actually using (localhost, LAN IP, prod domain).
+  const inferredOrigin = new URL(req.url).origin;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || inferredOrigin;
+
   const urlA = `${baseUrl}/n/${id}?t=${tokenA}`;
   const urlB = `${baseUrl}/n/${id}?t=${tokenB}`;
 
