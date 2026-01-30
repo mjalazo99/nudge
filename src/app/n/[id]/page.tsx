@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
 type Side = "A" | "B";
@@ -28,11 +28,40 @@ function fmtMoney(n: number) {
   });
 }
 
+function fmtDuration(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h`;
+  const d = Math.floor(h / 24);
+  return `${d}d`;
+}
+
+function safeNotify(title: string, body: string) {
+  try {
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+    new Notification(title, { body });
+  } catch {
+    // ignore
+  }
+}
+
 export default function NudgePage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const [nudge, setNudge] = useState<Nudge | null>(null);
   const [error, setError] = useState<string>("");
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(() => {
+    if (typeof window === "undefined") return "unsupported";
+    if (!("Notification" in window)) return "unsupported";
+    return Notification.permission;
+  });
+
+  const prevNudgeRef = useRef<Nudge | null>(null);
 
   const pot = useMemo(() => {
     if (!nudge) return 0;
@@ -57,13 +86,32 @@ export default function NudgePage() {
       setError(await res.text());
       return;
     }
-    setNudge(await res.json());
+    const next = (await res.json()) as Nudge;
+    setNudge(next);
   }
 
   useEffect(() => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Lightweight polling so two people see each other accept/vote without refreshing.
+  useEffect(() => {
+    if (!id) return;
+    const t = setInterval(() => refresh(), 4000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  async function enableNotifications() {
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window)) {
+      setNotifPermission("unsupported");
+      return;
+    }
+    const p = await Notification.requestPermission();
+    setNotifPermission(p);
+  }
 
   if (error) {
     return (
@@ -88,6 +136,7 @@ export default function NudgePage() {
   const deadlineMs = nudge.createdAt + nudge.deadlineMinutes * 60_000;
   const effectiveEndMs = nudge.endedEarlyAt ?? deadlineMs;
 
+  const totalMs = Math.max(1, effectiveEndMs - nudge.createdAt);
   const remainingMs = Math.max(0, effectiveEndMs - now);
   const expired = now >= effectiveEndMs;
 
@@ -98,6 +147,52 @@ export default function NudgePage() {
   const hh2 = hh % 24;
   const mm2 = mm % 60;
   const countdown = `${dd}d ${hh2}h ${mm2}m ${ss.toString().padStart(2, "0")}s`;
+
+  // Notifications: partner accept/vote + time-based reminders.
+  useEffect(() => {
+    if (!nudge) return;
+
+    const prev = prevNudgeRef.current;
+    prevNudgeRef.current = nudge;
+
+    // Only attempt notifications for known viewers.
+    if (!nudge.viewer?.side || !nudge.viewer?.token) return;
+
+    const other: Side = nudge.viewer.side === "A" ? "B" : "A";
+
+    // Partner accepted
+    if (prev && !prev.accepted[other] && nudge.accepted[other]) {
+      safeNotify("Nudge update", `Person ${other} accepted.`);
+    }
+
+    // Partner proposed consensus response (voted)
+    if (prev && !prev.outcome[other] && nudge.outcome[other]) {
+      const v = nudge.outcome[other] === "done" ? "It happened ✅" : "It didn’t ❌";
+      safeNotify("Consensus update", `Person ${other}: ${v}`);
+    }
+
+    // Time-based reminders
+    const keyBase = `nudge:${nudge.id}:${nudge.viewer.token}`;
+
+    // 50% time left reminder (fires when we cross the halfway point)
+    const halfAtMs = nudge.createdAt + Math.floor(totalMs / 2);
+    if (now >= halfAtMs) {
+      const k = `${keyBase}:remindedHalf`;
+      if (typeof window !== "undefined" && !localStorage.getItem(k)) {
+        localStorage.setItem(k, "1");
+        safeNotify("Nudge reminder", `Halfway point — ${fmtDuration(remainingMs)} left.`);
+      }
+    }
+
+    // 1 minute left warning
+    if (!expired && remainingMs <= 60_000) {
+      const k = `${keyBase}:reminded1m`;
+      if (typeof window !== "undefined" && !localStorage.getItem(k)) {
+        localStorage.setItem(k, "1");
+        safeNotify("Final warning", "1 minute left.");
+      }
+    }
+  }, [nudge, now, totalMs, remainingMs, expired]);
 
   async function act(kind: "accept" | "outcome", value?: "done" | "not_done") {
     if (!token || !nudge) return;
@@ -117,7 +212,19 @@ export default function NudgePage() {
   return (
     <main className="min-h-screen text-zinc-50">
       <div className="mx-auto max-w-xl px-5 py-10">
-        <div className="text-sm text-zinc-400">nudge</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-zinc-400">nudge</div>
+          {notifPermission === "unsupported" ? null : notifPermission === "granted" ? (
+            <div className="text-xs text-emerald-400">Notifications on</div>
+          ) : (
+            <button
+              onClick={enableNotifications}
+              className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:bg-zinc-900"
+            >
+              Enable notifications
+            </button>
+          )}
+        </div>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">{nudge.title}</h1>
         <p className="mt-3 text-zinc-200 whitespace-pre-wrap">{nudge.action}</p>
 
