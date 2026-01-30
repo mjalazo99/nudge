@@ -90,15 +90,17 @@ export default function Page() {
       return;
     }
 
-    const { id, url } = await res.json();
-    setStatus(`Created ✅ Share link: ${url}`);
+    const { urlA, urlB } = await res.json();
 
-    // simple UX: copy link
+    // MVP: show both links; creator can send B link to the other person.
+    const msg = `Created ✅\nA link: ${urlA}\nB link: ${urlB}`;
+
+    // copy both links
     try {
-      await navigator.clipboard.writeText(url);
-      setStatus(`Created ✅ Link copied: ${url}`);
+      await navigator.clipboard.writeText(msg);
+      setStatus(`Created ✅ Links copied to clipboard.\n\nA: ${urlA}\nB: ${urlB}`);
     } catch {
-      setStatus(`Created ✅ Share link: ${url}`);
+      setStatus(msg);
     }
   }
 

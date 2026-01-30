@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
 
-// MVP placeholder: create a shareable link and store in-memory (not durable).
-// Next step: persist to DB (e.g., Supabase) + Stripe Checkout sessions.
+// MVP: create a shareable link and store in-memory (not durable).
+// Next step: persist to DB + Stripe.
 
 type Side = "A" | "B";
 
 type CreateNudge = {
   title: string;
   action: string;
-  deadlineHours: number;
+  deadlineMinutes: number;
   stakeA: number;
   stakeB: number;
   winner: Side;
 };
 
-// Simple in-memory store for local dev.
-// NOTE: resets on server restart.
 const globalAny = global as any;
 const store: Map<string, any> = globalAny.__NUDGE_STORE__ || new Map();
 globalAny.__NUDGE_STORE__ = store;
@@ -33,8 +31,8 @@ export async function POST(req: Request) {
   if (!title) return bad("Missing title");
   if (!action) return bad("Missing action");
 
-  const deadlineHours = Number(body.deadlineHours);
-  if (!Number.isFinite(deadlineHours) || deadlineHours < 24 || deadlineHours > 24 * 30) {
+  const deadlineMinutes = Number(body.deadlineMinutes);
+  if (!Number.isFinite(deadlineMinutes) || deadlineMinutes < 1 || deadlineMinutes > 30 * 24 * 60) {
     return bad("Invalid deadline");
   }
 
@@ -47,20 +45,30 @@ export async function POST(req: Request) {
   const winner = body.winner === "B" ? "B" : "A";
 
   const id = crypto.randomUUID();
+  const tokenA = crypto.randomUUID();
+  const tokenB = crypto.randomUUID();
+
   store.set(id, {
     id,
     title,
     action,
-    deadlineHours,
+    deadlineMinutes,
     stakeA,
     stakeB,
     winner,
     createdAt: Date.now(),
-    state: "proposed",
+
+    // Agreement + outcome state (v1)
+    accepted: { A: false, B: false },
+    outcome: { A: null as null | "done" | "not_done", B: null as null | "done" | "not_done" },
+    endedEarlyAt: null as null | number,
+
+    tokens: { A: tokenA, B: tokenB },
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const url = `${baseUrl}/n/${id}`;
+  const urlA = `${baseUrl}/n/${id}?t=${tokenA}`;
+  const urlB = `${baseUrl}/n/${id}?t=${tokenB}`;
 
-  return NextResponse.json({ id, url });
+  return NextResponse.json({ id, urlA, urlB });
 }
