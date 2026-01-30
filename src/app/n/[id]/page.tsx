@@ -39,6 +39,13 @@ export default function NudgePage() {
     return (nudge.stakeA || 0) + (nudge.stakeB || 0);
   }, [nudge]);
 
+  // Always define hooks before any early returns to avoid hook-order errors.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   async function refresh() {
     if (!id) return;
     const url = new URL(`/api/nudges/${id}`, window.location.origin);
@@ -60,7 +67,7 @@ export default function NudgePage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-zinc-950 text-zinc-50 p-8">
+      <main className="min-h-screen text-zinc-50 p-8">
         <div className="mx-auto max-w-xl">Error: {error}</div>
       </main>
     );
@@ -68,7 +75,7 @@ export default function NudgePage() {
 
   if (!nudge) {
     return (
-      <main className="min-h-screen bg-zinc-950 text-zinc-50 p-8">
+      <main className="min-h-screen text-zinc-50 p-8">
         <div className="mx-auto max-w-xl">Loading…</div>
       </main>
     );
@@ -80,12 +87,6 @@ export default function NudgePage() {
 
   const deadlineMs = nudge.createdAt + nudge.deadlineMinutes * 60_000;
   const effectiveEndMs = nudge.endedEarlyAt ?? deadlineMs;
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   const remainingMs = Math.max(0, effectiveEndMs - now);
   const expired = now >= effectiveEndMs;
