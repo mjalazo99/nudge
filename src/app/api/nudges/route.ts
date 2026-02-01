@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
-// MVP: create a shareable link and store in-memory (not durable).
-// Next step: persist to DB + Stripe.
+// MVP v2: create a shareable link and store in Postgres (durable on Vercel).
+// Next step: auth (magic link) + Stripe.
+
+import { ensureSchema, sql } from "@/lib/db";
 
 type Side = "A" | "B";
 
@@ -13,10 +15,6 @@ type CreateNudge = {
   stakeB: number;
   winner: Side;
 };
-
-const globalAny = global as any;
-const store: Map<string, any> = globalAny.__NUDGE_STORE__ || new Map();
-globalAny.__NUDGE_STORE__ = store;
 
 function bad(msg: string, status = 400) {
   return new NextResponse(msg, { status });
@@ -42,29 +40,37 @@ export async function POST(req: Request) {
   if (!Number.isFinite(stakeB) || stakeB < 0) return bad("Invalid stakeB");
   if (stakeA + stakeB <= 0) return bad("At least one stake must be > 0");
 
-  const winner = body.winner === "B" ? "B" : "A";
+  const winner: Side = body.winner === "B" ? "B" : "A";
 
   const id = crypto.randomUUID();
   const tokenA = crypto.randomUUID();
   const tokenB = crypto.randomUUID();
 
-  store.set(id, {
-    id,
-    title,
-    action,
-    deadlineMinutes,
-    stakeA,
-    stakeB,
-    winner,
-    createdAt: Date.now(),
+  await ensureSchema();
 
-    // Agreement + outcome state (v1)
-    accepted: { A: false, B: false },
-    outcome: { A: null as null | "done" | "not_done", B: null as null | "done" | "not_done" },
-    endedEarlyAt: null as null | number,
-
-    tokens: { A: tokenA, B: tokenB },
-  });
+  await sql/* sql */`
+    INSERT INTO nudges (
+      id,
+      title,
+      action,
+      deadline_minutes,
+      stake_a,
+      stake_b,
+      winner,
+      token_a,
+      token_b
+    ) VALUES (
+      ${id}::uuid,
+      ${title},
+      ${action},
+      ${deadlineMinutes},
+      ${stakeA},
+      ${stakeB},
+      ${winner},
+      ${tokenA}::uuid,
+      ${tokenB}::uuid
+    );
+  `;
 
   // Build absolute URLs that work on whatever host the user is actually using (localhost, LAN IP, prod domain).
   const inferredOrigin = new URL(req.url).origin;

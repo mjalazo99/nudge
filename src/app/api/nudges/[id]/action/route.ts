@@ -1,25 +1,34 @@
 import { NextResponse } from "next/server";
 
-type Side = "A" | "B";
+import { ensureSchema, sql } from "@/lib/db";
 
-const globalAny = global as any;
-const store: Map<string, any> = globalAny.__NUDGE_STORE__ || new Map();
-globalAny.__NUDGE_STORE__ = store;
+type Side = "A" | "B";
 
 function bad(msg: string, status = 400) {
   return new NextResponse(msg, { status });
 }
 
+async function getRow(id: string) {
+  await ensureSchema();
+  const rows = (await sql/* sql */`
+    SELECT id, token_a, token_b, accepted_a, accepted_b, outcome_a, outcome_b, ended_early_at
+    FROM nudges
+    WHERE id = ${id}::uuid
+    LIMIT 1;
+  `) as any[];
+  return rows[0] as any;
+}
+
 function getSide(n: any, token: string | null): Side | null {
   if (!token) return null;
-  if (n.tokens?.A === token) return "A";
-  if (n.tokens?.B === token) return "B";
+  if (n.token_a === token) return "A";
+  if (n.token_b === token) return "B";
   return null;
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const n = store.get(id);
+  const n = await getRow(id);
   if (!n) return new NextResponse("Not found", { status: 404 });
 
   const body = (await req.json().catch(() => null)) as any;
@@ -30,8 +39,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const kind = body?.kind;
 
   if (kind === "accept") {
-    n.accepted[side] = true;
-    store.set(id, n);
+    if (side === "A") {
+      await sql/* sql */`UPDATE nudges SET accepted_a = TRUE WHERE id = ${id}::uuid;`;
+    } else {
+      await sql/* sql */`UPDATE nudges SET accepted_b = TRUE WHERE id = ${id}::uuid;`;
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -39,14 +51,18 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const value = body?.value;
     if (value !== "done" && value !== "not_done") return bad("Invalid outcome");
 
-    n.outcome[side] = value;
-
-    // If both agree and it's "done", end early (consensus can end time early).
-    if (n.outcome.A === "done" && n.outcome.B === "done") {
-      n.endedEarlyAt = Date.now();
+    if (side === "A") {
+      await sql/* sql */`UPDATE nudges SET outcome_a = ${value} WHERE id = ${id}::uuid;`;
+    } else {
+      await sql/* sql */`UPDATE nudges SET outcome_b = ${value} WHERE id = ${id}::uuid;`;
     }
 
-    store.set(id, n);
+    // If both agree and it's "done", end early (consensus can end time early).
+    const updated = await getRow(id);
+    if (updated?.outcome_a === "done" && updated?.outcome_b === "done" && !updated?.ended_early_at) {
+      await sql/* sql */`UPDATE nudges SET ended_early_at = NOW() WHERE id = ${id}::uuid;`;
+    }
+
     return NextResponse.json({ ok: true });
   }
 
